@@ -1,0 +1,23 @@
+{
+  "name": "node-red-october",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "docker run --rm -it -p 1880:1880 --privileged -v $(pwd)/.node-red:/data -v /var/run/docker.sock:/var/run/docker.sock --name nro node-red-october",
+    "build": "docker build -t node-red-october .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "node-red": {
+    "nodes": {
+      "executors": "src/executors.js",
+      "scan": "src/scan.js"
+    }
+  },
+  "dependencies": {
+    "execa": "^4.0.2",
+    "mustache": "^4.0.1"
+  }
+}

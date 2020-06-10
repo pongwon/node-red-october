@@ -1,0 +1,72 @@
+<script type='text/javascript'>
+	RED.nodes.registerType('targets', {
+		category: 'attacks',
+		color: '#5ba1dd',
+		defaults: {
+			name: {value: ''},
+			targets: {value: ''}
+		},
+		inputs: 0,
+		outputs: 1,
+		icon: 'file.png',
+		label: function() {
+			return this.name || 'targets';
+		},
+		button: {
+			enabled: function() {
+				return !this.changed
+			},
+			onclick: function() {
+				if (this.changed) {
+					return RED.notify(RED._("notification.warning", {message:RED._("notification.warnings.undeployedChanges")}),"warning");
+				}
+				var payload = this.payload;
+				if ((this.payloadType === 'flow') ||
+					(this.payloadType === 'global')) {
+					var key = RED.utils.parseContextKey(payload);
+					payload = this.payloadType+"."+key.key;
+				}
+				var label = this._def.label.call(this);
+				if (label.length > 30) {
+					label = label.substring(0,50)+"...";
+				}
+				label = label.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+				var node = this;
+				$.ajax({
+					url: "inject/"+this.id,
+					type:"POST",
+					success: function(resp) {
+						RED.notify(node._("Scanning started",{label:label}),{type:"success",id:"inject"});
+					},
+					error: function(jqXHR,textStatus,errorThrown) {
+						if (jqXHR.status == 404) {
+							RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.not-deployed")}),"error");
+						} else if (jqXHR.status == 500) {
+							RED.notify(node._("common.notification.error",{message:node._("inject.errors.failed")}),"error");
+						} else if (jqXHR.status == 0) {
+							RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.no-response")}),"error");
+						} else {
+							RED.notify(node._("common.notification.error",{message:node._("common.notification.errors.unexpected",{status:jqXHR.status,message:textStatus})}),"error");
+						}
+					}
+				});
+			}
+		}
+	});
+</script>
+
+<script type='text/html' data-template-name='targets'>
+    <div class='form-row'>
+        <label for='node-input-name'><i class='icon-tag'></i> Name</label>
+        <input type='text' id='node-input-name' placeholder='Name'>
+    </div>
+
+    <div class='form-row'>
+        <label for='node-input-targets'><i class='icon-tag'></i> Targets</label>
+        <textarea type='text' id='node-input-targets'></textarea>
+    </div>
+</script>
+
+<script type='text/html' data-help-name='targets'>
+    <p>Targets to scan</p>
+</script>
